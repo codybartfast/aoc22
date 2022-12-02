@@ -2,53 +2,36 @@ cabal-version:      2.4
 name:               aoc22
 version:            0.1.0.0
 
--- A short (one-line) description of the package.
--- synopsis:
-
--- A longer description of the package.
--- description:
-
--- A URL where users can report bugs.
--- bug-reports:
-
--- The license under which the package is released.
--- license:
-
--- The package author(s).
--- author:
-
--- An email address to which users can send suggestions, bug reports, and patches.
--- maintainer:
-
--- A copyright notice.
--- copyright:
--- category:
-extra-source-files: CHANGELOG.md
-
 library
-    exposed-modules:  MyLib
+    exposed-modules:
+        Day02
 
     -- Modules included in this library but not exported.
     -- other-modules:
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.16.3.0
-    hs-source-dirs:   src
+    build-depends:    
+        base ^>=4.16.3.0,
+        split,
+
+    hs-source-dirs:   .
     default-language: Haskell2010
+
 
 executable aoc22
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules:
+        Day02
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:
         base ^>=4.16.3.0,
+        aoc22,
         split,
-        aoc22
 
-    hs-source-dirs:   app
+    hs-source-dirs:   .
     default-language: Haskell2010
