@@ -1,31 +1,30 @@
 import qualified Data.Char as Char
 import qualified Data.List.Split as Split
 
-score1 (l, r) = do
-  let norm n = (n + 3) `mod` 3
-  let left = (Char.ord l - Char.ord 'A') + 1 
-  let right = (Char.ord r - Char.ord 'X') + 1
-  let score = norm (right - left + 1) * 3
-  right + score
+-- Rock = 0, Paper = 1, Scissors = 2
 
-score2 (l, r) = do
-  let norm n = (n + 3) `mod` 3
-  let left = Char.ord l - Char.ord 'A'
-  let right = Char.ord r - Char.ord 'X' 
-  let choice = norm $ left - 1 + right
-  choice + 1 + 3 * right
+-- make sure the result of arithmetic is a valid choise
+norm n = (n + 3) `mod` 3
+
+score (left, right) = right + 1 + 3 * norm (right - left + 1)
+
+-- choose item to play for required result
+-- Lose = 0, Draw = 1, Win = 2
+select (left, right) = (left, norm (left + (right - 1)))
   
 main = do
-  let lns = Split.splitOn "\n" puzzleIn
-  let pairs = map (\(l:_:r:_) -> (l, r)) lns
-  print $ sum (map score1 pairs)
-  print $ sum (map score2 pairs)
+  let lns = Split.splitOn "\n" puzzle
+  let c2i = Char.ord
+  let pairFromLine (left:_:right:_) = (c2i left - c2i 'A', c2i right - c2i 'X')
+  let pairs = map pairFromLine lns
+  print $ sum $ map score pairs
+  print $ sum $ map (score . select) pairs
 
 test1 = "A Y\n\
 \B X\n\
 \C Z"
 
-puzzleIn = "C X\n\
+puzzle = "C X\n\
 \B Y\n\
 \C Z\n\
 \C Z\n\
