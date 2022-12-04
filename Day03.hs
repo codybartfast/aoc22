@@ -5,19 +5,27 @@ import qualified Data.List as List
 import qualified Data.Set as Set
 
 solve input lines = do
-    print (take 200 input)
-    putStrLn ""
-    let commonItems = map findCommon lines
-    -- print commonItems
-    print (sum $ map priority commonItems)
+    let commonItems = map packCommon lines
+    print $ sum $ map priority commonItems
 
-findCommon line = do
+    let groups = group [] lines
+    print $ sum $ map (priority . groupCommon) groups
+
+packCommon line = do
     let packSize = List.length line `div` 2
     let items1 = Set.fromList (take packSize line)
     let items2 = Set.fromList (drop packSize line)
-    head $ Set.toList $ Set.intersection items1 items2
+    pick $ Set.intersection items1 items2
+
+pick = head . Set.toList
 
 priority c = do
     let code = Char.ord c
     if code < 97 then code - 38 else code - 96
 
+group :: [[String]] -> [String] -> [[String]]
+group groups [] = groups
+group groups elves = group (take 3 elves:groups) (drop 3 elves)
+
+groupCommon group =
+    pick $ List.foldl1 Set.intersection (map Set.fromList group)
