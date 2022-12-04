@@ -12,6 +12,7 @@ library
     -- other-extensions:
     build-depends:    
         base ^>=4.16.3.0,
+        containers,
         split,
 
     hs-source-dirs:   .
@@ -23,7 +24,7 @@ executable aoc22
 
     -- Modules included in this executable, other than Main.
     other-modules:
-        Day04
+        Day03
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
