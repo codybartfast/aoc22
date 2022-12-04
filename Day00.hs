@@ -1,4 +1,4 @@
-module Day01 (solve) where
+module Day00 (solve) where
 
 solve input lines = do
     print (take 200 input)

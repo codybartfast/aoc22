@@ -4,7 +4,7 @@ version:            0.1.0.0
 
 library
     exposed-modules:
-        Day02
+        -- Day03
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -24,14 +24,15 @@ executable aoc22
 
     -- Modules included in this executable, other than Main.
     other-modules:
-        Day02
+        Day03
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:
         base ^>=4.16.3.0,
-        aoc22,
+        containers,
         split,
+        aoc22,
 
     hs-source-dirs:   .
     default-language: Haskell2010
