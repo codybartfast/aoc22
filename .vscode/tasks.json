@@ -16,8 +16,8 @@
       },
       "label": "haskell build",
       "type": "shell",
-      //"command": "cabal configure && cabal build"
-      "command": "stack build"
+      "command": "cabal run",
+      // "command": "stack build"
     },
     {
       // F6
@@ -45,6 +45,14 @@
       "type": "shell",
       "label": "haskell watch",
       "command": "stack build --test --no-run-tests --file-watch"
-    }
+    },
+    {
+        "label": "Cabal Run",
+        "command": "cabal",
+        "args": [
+            "run"
+        ],
+        "type": "shell"
+  }
   ]
 }
