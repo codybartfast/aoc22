@@ -1,4 +1,4 @@
-module Day00 (solve) where
+module Day06 (solve) where
 
 import Data.Function
 
