@@ -12,7 +12,7 @@ library
     -- other-extensions:
     build-depends:    
         base ^>=4.16.3.0,
-        -- containers,
+        containers,
         split,
 
     hs-source-dirs:   .
@@ -31,7 +31,7 @@ executable aoc22
     build-depends:
         base ^>=4.16.3.0,
         aoc22,
-        -- containers,
+        containers,
         split,
 
     hs-source-dirs:   .

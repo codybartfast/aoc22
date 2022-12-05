@@ -8,8 +8,9 @@ import Day05 (solve)
 trim = List.dropWhileEnd Char.isSpace . dropWhile Char.isSpace
 
 main = do
-  fileContent <- readFile "input/Day05/Test01.txt"
-  let input = trim fileContent
+  fileContent <- readFile "input/Day05/Input.txt"
+  -- let input = trim fileContent
+  let input = fileContent
   let lines = Split.splitOn "\n" input
   solve input lines
   putStrLn ""
