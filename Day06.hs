@@ -1,7 +1,7 @@
 module Day06 (solve) where
 
 import Data.Function
-import qualified Data.List as List
+import Data.List
 
 solve input lines = do
     print $ endOfFirstUniqueN 4 input
@@ -9,12 +9,12 @@ solve input lines = do
 
 endOfFirstUniqueN n list =
     nwise n list
-    & map (length . List.nub)
+    & map (length . nub)
     & takeWhile  (< n)
     & length
     & (+ n)
 
 nwise n list =
-    List.tails list
-    & map (List.take n)
-    & List.dropWhileEnd ((< n). length)
+    tails list
+    & map (take n)
+    & dropWhileEnd ((< n). length)
