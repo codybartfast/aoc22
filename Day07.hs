@@ -15,12 +15,48 @@ solve input rawLines = do
     let pls = pathListings crs
     let tree = buildTree pls ["/"]
     let sizes = allDirs tree & map size & sort
-    print $ sizes & filter (< 100000)  & sum
+    print $ sizes & filter (< 100000) & sum
 
     let minDel = size tree - (70000000 - 30000000)
     print $ sizes & filter (>= minDel) & head
 
-allDirs dir = dir : concatMap allDirs (subDirs dir)
+-- pairs comprsing a command and the response to that command
+commandResponses lines = do
+    crs
+    where
+        parse crs partialResponse [] = partialResponse:crs & reverse & tail
+        parse crs partialResponse (("$":restWords):restLines) =
+                parse (partialResponse:crs) (restWords,[]) restLines
+        parse crs (command, responses) (response:restLines) =
+                parse crs (command, response:responses) restLines
+        crs = parse [] ([], []) lines
+
+-- map from a path to a pair comprising its child paths and files for that path
+pathListings commandResponses = do
+    pls & Map.fromList
+    where
+        pls = parse [] [] commandResponses
+
+        parse pls path [] =
+            pls
+        parse pls path ((["cd", dir], _):crs') =
+            parse pls (updatePath path dir) crs'
+        parse pls path ((["ls"], listing):crs') =
+            parse ((path, readListing path listing):pls) path crs'
+
+        readListing path listing = do
+            let subPaths = 
+                    filter ((== "dir") . head) listing
+                    & map (\[_, name]  -> name:path)
+            let files = 
+                    filter ((/= "dir") . head) listing
+                    & map (\[size, name]  -> (read size :: Integer, name))
+            (subPaths, files)
+
+        updatePath path dir = 
+            case dir of "/" -> ["/"]
+                        ".." -> tail path
+                        _ -> dir:path
 
 -- tree representing the knowN file system
 buildTree pathListings path = do
@@ -33,39 +69,4 @@ buildTree pathListings path = do
          , size = sizeFiles + sizeDirs
          }
 
--- map from a path to a pair comprising its child paths and files for that path
-pathListings commandResponses = do
-    pls & reverse & Map.fromList
-    where
-        pls = parse [] [] commandResponses
-
-        parse pls path [] =
-            pls
-        parse pls path ((["cd", dir], _):crs') =
-            parse pls (updatePath path dir) crs'
-        parse pls path ((["ls"], listing):crs') =
-            parse ((reverse path, readListing path listing):pls) path crs'
-
-        updatePath path dir = case dir of "/" -> ["/"]
-                                          ".." -> tail path
-                                          _ -> dir:path
-
-        readListing path listing = do
-            let subPaths = 
-                    filter ((== "dir") . head) listing
-                    & map (\[_, name]  -> reverse (name:path))
-            let files = 
-                    filter ((/= "dir") . head) listing
-                    & map (\[size, name]  -> (read size :: Integer, name))
-            (subPaths, files)
-
--- pairs comprsing a command and the response to that command
-commandResponses lines = do
-    crs
-    where
-        parse crs partialResponse [] = partialResponse:crs & reverse & tail
-        parse crs partialResponse (("$":restWords):restLines) =
-                parse (partialResponse:crs) (restWords,[]) restLines
-        parse crs (command, responses) (response:restLines) =
-                parse crs (command, response:responses) restLines
-        crs = parse [] ([], []) lines
+allDirs dir = dir : concatMap allDirs (subDirs dir)
