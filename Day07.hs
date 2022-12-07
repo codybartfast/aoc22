@@ -15,14 +15,15 @@ solve input rawLines = do
     let crs = commandResponses lines
     let pls = pathListings crs
     let tree = buildTree pls ["/"]
-    let sizes = allNodes tree & map size & sort
+    let sizes = allDirs tree & map size & sort
     print $ sizes & filter (< 100000)  & sum
 
     let minDel = size tree - (70000000 - 30000000)
     print $ sizes & filter (>= minDel) & head
 
-allNodes node = node : concatMap allNodes (subDirs node)
+allDirs dir = dir : concatMap allDirs (subDirs dir)
 
+-- tree representing the know file system
 buildTree pathListings path = do
     let Just (subPaths, files) = Map.lookup path pathListings
     let subDirs = map (buildTree pathListings) subPaths
@@ -34,6 +35,7 @@ buildTree pathListings path = do
          , size = sizeFiles + sizeDirs
          }
 
+-- map from a path to a pair comprising its child paths and files for that path
 pathListings commandResponses = do
     pls & reverse & Map.fromList
     where
@@ -51,21 +53,21 @@ pathListings commandResponses = do
                                           _ -> dir:path
 
         readListing path listing = do
-            let dirs = 
+            let subPaths = 
                     filter ((== "dir") . head) listing
                     & map (\[_, name]  -> reverse (name:path))
             let files = 
                     filter ((/= "dir") . head) listing
                     & map (\[size, name]  -> (read size :: Integer, name))
-            (dirs, files)
+            (subPaths, files)
 
-            
+-- pairs comprsing a command and the response to that command
 commandResponses lines = do
     crs
     where
-        parse crs part [] = part:crs & reverse & tail
-        parse crs part (("$":restWords):restLines) =
-                parse (part:crs) (restWords,[]) restLines
+        parse crs partialResponse [] = partialResponse:crs & reverse & tail
+        parse crs partialResponse (("$":restWords):restLines) =
+                parse (partialResponse:crs) (restWords,[]) restLines
         parse crs (command, responses) (response:restLines) =
                 parse crs (command, response:responses) restLines
         crs = parse [] ([], []) lines
