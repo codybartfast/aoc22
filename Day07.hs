@@ -4,18 +4,37 @@ import Data.Function
 import Data.List
 import qualified Data.Map as Map
 
--- data Dir = Node { path :: [String]
---                  , subDirs :: [Dir]
---                  , files :: (Int, String)
---                  }
+data Dir = Dir { path :: [String]
+                 , subDirs :: [Dir]
+                 , files :: [(Integer, String)]
+                 , size :: Integer
+                 } deriving (Show)
 
 solve input rawLines = do
     let lines = map words rawLines
     let crs = commandResponses lines
-    print (pathListing crs)
-    putStrLn ""
+    let pls = pathListings crs
+    let tree = buildTree pls ["/"]
+    let sizes = allNodes tree & map size & sort
+    print $ sizes & filter (< 100000)  & sum
 
-pathListing commandResponses = do
+    let minDel = size tree - (70000000 - 30000000)
+    print $ sizes & filter (>= minDel) & head
+
+allNodes node = node : concatMap allNodes (subDirs node)
+
+buildTree pathListings path = do
+    let Just (subPaths, files) = Map.lookup path pathListings
+    let subDirs = map (buildTree pathListings) subPaths
+    let sizeFiles = files & map fst & sum
+    let sizeDirs = subDirs & map size & sum
+    Dir { path = path
+         , subDirs = subDirs
+         , files = files 
+         , size = sizeFiles + sizeDirs
+         }
+
+pathListings commandResponses = do
     pls & reverse & Map.fromList
     where
         pls = parse [] [] commandResponses
@@ -25,7 +44,7 @@ pathListing commandResponses = do
         parse pls path ((["cd", dir], _):crs') =
             parse pls (updatePath path dir) crs'
         parse pls path ((["ls"], listing):crs') =
-            parse ((path, readListing path listing):pls) path crs'
+            parse ((reverse path, readListing path listing):pls) path crs'
 
         updatePath path dir = case dir of "/" -> ["/"]
                                           ".." -> tail path
@@ -37,7 +56,7 @@ pathListing commandResponses = do
                     & map (\[_, name]  -> reverse (name:path))
             let files = 
                     filter ((/= "dir") . head) listing
-                    & map (\[size, name]  -> (read size :: Int, name))
+                    & map (\[size, name]  -> (read size :: Integer, name))
             (dirs, files)
 
             
@@ -49,4 +68,4 @@ commandResponses lines = do
                 parse (part:crs) (restWords,[]) restLines
         parse crs (command, responses) (response:restLines) =
                 parse crs (command, response:responses) restLines
-        crs = parse [] ([],[]) lines
+        crs = parse [] ([], []) lines
