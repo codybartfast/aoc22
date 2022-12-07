@@ -4,8 +4,7 @@ import Data.Function
 import Data.List
 import qualified Data.Map as Map
 
-data Dir = Dir { path :: [String]
-                 , subDirs :: [Dir]
+data Dir = Dir { subDirs :: [Dir]
                  , files :: [(Integer, String)]
                  , size :: Integer
                  } deriving (Show)
@@ -23,14 +22,13 @@ solve input rawLines = do
 
 allDirs dir = dir : concatMap allDirs (subDirs dir)
 
--- tree representing the know file system
+-- tree representing the knowN file system
 buildTree pathListings path = do
     let Just (subPaths, files) = Map.lookup path pathListings
     let subDirs = map (buildTree pathListings) subPaths
     let sizeFiles = files & map fst & sum
     let sizeDirs = subDirs & map size & sum
-    Dir { path = path
-         , subDirs = subDirs
+    Dir { subDirs = subDirs
          , files = files 
          , size = sizeFiles + sizeDirs
          }
