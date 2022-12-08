@@ -2,27 +2,52 @@ module Day08 (solve) where
 
 import Data.Function
 import Data.List
-import Control.Monad (when)
+
+type Tree = ((Int, Int), Int)
 
 solve input lines = do
-    let trees = labelTrees lines
-    let flippedRows = map reverse trees
-    let columns = transpose trees
-    let flippedColumns = map reverse columns
-    let linesOfSight = concat [trees, flippedRows, columns, flippedColumns]
-    let visible = map pickVisible linesOfSight & concat & nub
-    print (length visible)
+    let forest = readTrees lines
+    forest
+        & countVisible
+        & print
+    forest
+        & concat
+        & map (scenicScore forest)
+        & maximum
+        & print
 
-pickVisible :: [((Int, Int), Int)] -> [((Int, Int), Int)]
-pickVisible =
-    pick [] (-1)
+scenicScore forest tree@((x, y), candidateHeight) = do
+    let (mxCol, mxRow) = ((length . head) forest - 1, length forest - 1)
+    let up = [y-1, y-2 .. 0] & map (\y -> forest !! y !! x)
+    let down = [y+1, y+2 .. mxRow] & map (\y -> forest !! y !! x)
+    let left = [x-1, x-2 .. 0] & map (\x -> forest !! y !! x)
+    let right = [x+1, x+2 .. mxCol] & map (\x -> forest !! y !! x)
+    product [viewDist up, viewDist left, viewDist down, viewDist right]
     where
-        pick rslts mx [] = rslts
-        pick rslts mx (tree@(_, h):rest) =
-            if h > mx then pick (tree:rslts) h rest else pick rslts mx rest
+        pick :: [Tree] -> [Tree]
+        pick [] = []
+        pick (tree@(pos, height):rest)
+            | height < candidateHeight = tree : pick rest
+            | otherwise = [tree]
+        viewDist = length . pick
 
-labelTrees :: [String] -> [[((Int, Int), Int)]]
-labelTrees lines = do
+countVisible forest = do
+    let flippedRows = map reverse forest
+    let columns = transpose forest
+    let flippedColumns = map reverse columns
+    let linesOfSight = concat [forest, flippedRows, columns, flippedColumns]
+    concatMap pickVisible linesOfSight & nub & length
+    
+pickVisible :: [Tree] -> [Tree]
+pickVisible =
+    pick (-1)
+    where
+        pick mx [] = []
+        pick mx (tree@(_, h):rest) =
+            if h > mx then tree : pick h rest else pick mx rest
+
+readTrees :: [String] -> [[Tree]]
+readTrees lines = do
     let labelLine = zip [0..]
     map (zip [0..]) lines 
         & zipWith (\y pairs -> map (\(x, t) -> ((x, y), read [t])) pairs ) [0..]
