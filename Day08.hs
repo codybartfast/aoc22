@@ -22,7 +22,7 @@ scenicScore forest tree@((x, y), candidateHeight) = do
     let down = [y+1, y+2 .. mxRow] & map (\y -> forest !! y !! x)
     let left = [x-1, x-2 .. 0] & map (\x -> forest !! y !! x)
     let right = [x+1, x+2 .. mxCol] & map (\x -> forest !! y !! x)
-    product [viewDist up, viewDist left, viewDist down, viewDist right]
+    product $ map viewDist [up, down, left, right]
     where
         pick :: [Tree] -> [Tree]
         pick [] = []
@@ -47,7 +47,5 @@ pickVisible =
             if h > mx then tree : pick h rest else pick mx rest
 
 readTrees :: [String] -> [[Tree]]
-readTrees lines = do
-    let labelLine = zip [0..]
-    map (zip [0..]) lines 
-        & zipWith (\y pairs -> map (\(x, t) -> ((x, y), read [t])) pairs ) [0..]
+readTrees = 
+    zipWith (\y line -> zipWith (\x h -> ((x, y), read [h])) [0..] line) [0..] 
