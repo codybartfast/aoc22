@@ -4,39 +4,37 @@ import Data.Function
 import Data.List
 
 solve input lines = do
-    let motions = parse lines
-    let headPath = moveHead (0, 0) motions
-    let tailPath = moveTail (0, 0) headPath
-    print $ tailPath & nub & length
+    let headPath = lines & motions & moveHead (0, 0)
+    print $ headPath & follow & nub & length
+    print $ headPath & iterate follow & (!! 9) & nub & length
 
-moveTail start headPath = do
-    follow [start] headPath & reverse
+follow prev = do
+    reverse $ follow [(0, 0)] prev
     where
-        unit 0 = 0
-        unit n = n `div` abs n
-        follow path [] = path
-        follow path@((x, y):_) ((hx, hy):hrest) = do
-            let (vx, vy) = (hx - x, hy - y)
+        follow visited [] = visited
+        follow visited@((x, y):_) ((px, py):prev') = do
+            let (vx, vy) = (px - x, py - y)
             if (abs vx > 1) || abs vy > 1 then do
                 let (ux, uy) = (unit vx, unit vy)
-                follow ((x + ux, y + uy):path) hrest
+                follow ((x + ux, y + uy):visited) prev'
             else
-                follow path hrest
-
+                follow visited prev'
+        unit 0 = 0
+        unit n = n `div` abs n
 
 -- this could probably just be a foldMap but when is my poor haskells?
 moveHead start motions =
-    move [start] motions & reverse
+    move [(0, 0)] motions & reverse
     where
-        move path [] = path
-        move path@((x, y):_) (m:mrest) = do
-            let next = case m of 'U' -> (x - 1, y)
-                                 'L' -> (x, y - 1)
-                                 'R' -> (x, y + 1)
-                                 'D' -> (x + 1, y)
-            move (next:path) mrest
+        move visited [] = visited
+        move visited@((x, y):_) (motion:motions') = do
+            let next = case motion of 'U' -> (x - 1, y)
+                                      'L' -> (x, y - 1)
+                                      'R' -> (x, y + 1)
+                                      'D' -> (x + 1, y)
+            move (next:visited) motions'
 
-parse lines = do
+motions lines = do
     concatMap expand lines
     where
         expand line = do
