@@ -13,30 +13,26 @@ follow prev = do
     where
         follow visited [] = visited
         follow visited@((x, y):_) ((px, py):prev') = do
-            let (vx, vy) = (px - x, py - y)
-            if (abs vx > 1) || abs vy > 1 then do
-                let (ux, uy) = (unit vx, unit vy)
+            let (dx, dy) = (px - x, py - y)
+            if (abs dx > 1) || abs dy > 1 then do
+                let (ux, uy) = (unit dx, unit dy)
                 follow ((x + ux, y + uy):visited) prev'
             else
                 follow visited prev'
         unit 0 = 0
         unit n = n `div` abs n
 
--- this could probably just be a foldMap but when is my poor haskells?
-moveHead start motions =
-    move [(0, 0)] motions & reverse
-    where
-        move visited [] = visited
-        move visited@((x, y):_) (motion:motions') = do
-            let next = case motion of 'U' -> (x - 1, y)
-                                      'L' -> (x, y - 1)
-                                      'R' -> (x, y + 1)
-                                      'D' -> (x + 1, y)
-            move (next:visited) motions'
+moveHead start motions = do
+    let move (x, y) motion =
+            case motion of 'U' -> (x - 1, y)
+                           'L' -> (x, y - 1)
+                           'R' -> (x, y + 1)
+                           'D' -> (x + 1, y)    
+    scanl move start motions
 
 motions lines = do
     concatMap expand lines
     where
         expand line = do
-            let [[dir], n] = words line
-            replicate (read n) dir
+            let [[direction], n] = words line
+            replicate (read n) direction
