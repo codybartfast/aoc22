@@ -22,12 +22,18 @@ solve input lines = do
                 & partition (\ (a , b) -> a == b)
                 & fst & head & fst
 
-    let Just (_, distance) =
+    let Just (_, part1) =
             finalTerrain
             & Map.lookup (end lines)
 
-    print $ distance
+    let part2 =
+            (ends lines)
+            & map (snd . snd . get finalTerrain . fst)
+            & minimum
 
+
+    print part1
+    print part2
 
 
 
@@ -82,15 +88,21 @@ readTerrain lines = do
         & Map.fromList
     where
         getValue c  
-            | c == 'S' = (0, 0)
-            | c == 'E' = (25, 2000)
-            | otherwise = (Char.ord c - Char.ord 'a', 2000)
+            | c == 'E' = (0, 0)
+            | c == 'S' = (25, 2000)
+            | otherwise = (25 - (Char.ord c - Char.ord 'a'), 2000)
 
 end lines = do
     let Just (pos, _) = zipWith (\ y row -> 
                     zipWith (\ x val -> ((x, y), val)) [0..] row) [0..] lines
                 & concat
-            & find ((== 'E'). snd)
+            & find ((== 'S'). snd)
     pos
+
+ends lines = do
+    zipWith (\ y row -> 
+            zipWith (\ x val -> ((x, y), val)) [0..] row) [0..] lines
+        & concat
+        & filter ((\ elv -> elv == 'S' || elv == 'a'). snd)
 
 pairwise a = zip a (tail a)
