@@ -10,7 +10,7 @@ import qualified Data.List.Split as Split
 solve input lines = do
     let monkies = readMonkies lines & zip [0..] & Map.fromList   
     let rounds = unfoldr (\ms -> Just (ms, playRound ms)) monkies
-    print $ rounds !! 20 & Map.toList & map (count . snd) & sort & reverse & take 2 & product
+    print $ rounds !! 20 -- & Map.toList & map (count . snd) & sort & reverse & take 2 & product
 
 playRound :: Map.Map Int Monkey -> Map.Map Int Monkey
 playRound monkies = do
@@ -28,7 +28,7 @@ catch monkies (target, item) = do
 
 monkeyDo monkey = do
     let inspect item = do
-            let worry = operation monkey item `div` 3
+            let worry = operation monkey item -- `div` 3
             (test monkey worry, worry)
     let throws = items monkey & map inspect
     (monkey {items = [], count = count monkey + length (items monkey)}, throws)
@@ -74,7 +74,7 @@ data Monkey = Monkey
     , test :: Int -> Int
     , count :: Int
     } 
-instance Show Monkey where show m = show (count m) -- ++ " - " ++ show (note m)
+instance Show Monkey where show m = show (count m) ++ " - " ++ show (items m)
 
 paras = 
     paras [[]]
