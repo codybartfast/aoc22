@@ -1,16 +1,15 @@
 module Day13 (solve) where
 
-import Control.Monad (forM_)
 import Data.Function ( (&) )
 import Data.List
 
-data Msg = N Int | L [Msg] deriving (Show, Eq)
+data Msg = Num Int | List [Msg] deriving (Show, Eq)
 
 instance Ord Msg where
-    compare (N a) (N b) = compare a b
-    compare (L a) (L b) = compare a b
-    compare number@(N _) list@(L _) = compare (L [number]) list
-    compare list@(L _) number@(N _) = compare list (L [number]) 
+    compare (Num a) (Num b) = compare a b
+    compare (List a) (List b) = compare a b
+    compare number@(Num _) list@(List _) = compare (List [number]) list
+    compare list@(List _) number@(Num _) = compare list (List [number]) 
 
 solve input lines = do
     let pairs = paras lines
@@ -22,26 +21,36 @@ solve input lines = do
         & map fst
         & sum
 
+    let (div2, div6) = (readMsg "[[2]]", readMsg "[[6]]")
+    let sorted = 
+            lines
+            & filter (/= "")
+            & map readMsg
+            & (\ lns -> div2:div6:lns)
+            & sort
+    let (Just idx1, Just idx2) = (elemIndex div2 sorted, elemIndex div6 sorted)
+    print $ (idx1 + 1) * (idx2 + 1)
+
 readMsg line = do
-    readList [] (tail line) & fst
+    readMsg line & fst
     where
         readList :: [Msg] -> String -> (Msg, String)
         readList parts (']':rest) = 
-            (L (reverse parts), rest)
+            (List (reverse parts), rest)
         readList parts (',':rest) = 
             readList parts rest
         readList parts txt = do
-            let (msg, rest') = readPart txt
+            let (msg, rest') = readMsg txt
             readList (msg:parts) rest'
 
         readNumber :: [Char] -> String -> (Msg, String)
         readNumber digits (d:rest@(nxt:_))
-            | nxt == ',' || nxt == ']' = (N (read (reverse (d:digits))), rest)
+            | nxt == ',' || nxt == ']' = (Num (read (reverse (d:digits))), rest)
             | otherwise = readNumber (d:digits) rest
 
-        readPart :: String -> (Msg, String)
-        readPart ('[':rest) = readList [] rest
-        readPart txt = readNumber [] txt
+        readMsg :: String -> (Msg, String)
+        readMsg ('[':rest) = readList [] rest
+        readMsg txt = readNumber [] txt
 
 paras = 
     paras [[]]
