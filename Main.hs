@@ -1,14 +1,14 @@
 
+import Data.List
 import qualified Data.Char as Char
-import qualified Data.List as List
 import qualified Data.List.Split as Split
 
-import Day13 (solve)
+import Day14 (solve)
 
-trim = List.dropWhileEnd Char.isSpace
+trim = dropWhileEnd Char.isSpace
 
 main = do
-  fileContent <- readFile "input/Day13/Input.txt"
+  fileContent <- readFile "input/Day14/Test01.txt"
   let input = trim fileContent
   let lines = Split.splitOn "\n" input
   solve input lines
