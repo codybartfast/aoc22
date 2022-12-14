@@ -7,7 +7,7 @@ import Data.List
 
 import qualified Data.Map as Map
 import qualified Data.List.Split as Split
-import Control.Arrow (Arrow(first))
+import Control.Monad (forM_)
 
 type Cave = Map.Map (Int, Int) Char
 type Pos = (Int, Int)
@@ -18,13 +18,16 @@ solve input lines = do
     let floor = rock & map snd & maximum
     let cave = zip rock (repeat '#') & Map.fromList :: Cave
     let caves = unfoldr (dropSand floor) (cave, (-1, -1))
-    let (lstCave, lstPos) =
+    let final@(lstCave, _) =
             caves
             & dropWhile (\ (_, (x, y)) -> y /= floor)
             & head
-    let restingSand = length lstCave - length cave
-
+    let lastSize = lstCave & Map.size
+    let restingSand = lastSize - Map.size cave
+    -- display 85 (caves !! 515)
+    display 1000 final
     print restingSand
+    print $ lstCave & Map.toList & map snd & filter (== 'o') & length
 
 dropSand :: Int -> (Cave, Pos) -> Maybe ((Cave, Pos), (Cave, Pos))
 dropSand floor (cave, _) = do
@@ -39,12 +42,13 @@ dropSand floor (cave, _) = do
 sandPath floor cave =
     unfoldr advanceSand (500, 0) 
     where
+        isAir pos = Map.member pos cave & not
         advanceSand (x, y) = do
             if y == floor then 
                 Nothing 
             else
                 [(x, y + 1), (x - 1, y + 1), (x + 1, y + 1)]
-                    & find (\ pos -> do Map.member pos cave & not)
+                    & find isAir
                     & \ case
                             (Just pos) -> Just (pos, pos)
                             Nothing -> Nothing
@@ -64,3 +68,26 @@ readPaths lines = do
         & map (map (\ xyTxt -> do
             let [xTxt, yTxt] = Split.splitOn "," xyTxt
             (read xTxt, read yTxt) )) 
+
+display :: Int -> (Cave, Pos) -> IO ()
+display lns (cave', lstPos) = do
+    forM_ (take lns gridCoords) (\ row -> map lookup row & putStrLn)
+    where 
+        cave = cave' & Map.insert lstPos 'X' -- & Map.insert (500, 0) 'X' 
+        ps = Map.keys cave
+        minX = ps & map fst & minimum
+        maxX = ps & map fst & maximum
+        minY = ps & map snd & minimum
+        maxY = ps & map snd & maximum
+
+        xs = [0 .. (maxX - minX)]
+        ys = [0 .. (maxY - minY)]
+
+        gridCoords =
+                ys
+                & map (\ y -> xs & map (,y))
+        lookup pos@(x, y) = do
+            Map.lookup (minX + x, minY + y) cave
+                & \ case
+                        (Just c) -> c
+                        _ -> ' '
