@@ -17,10 +17,10 @@ solve input lines = do
     let rock = concatMap expandPath paths & nub
     let floor = rock & map snd & maximum
     let cave = zip rock (repeat '#') & Map.fromList :: Cave
-    let caves = unfoldr (dropSand floor) (cave, (-1, -1))
+    let caves = unfoldr (dropSand floor) (cave, [(-1, -1)])
     let final@(lstCave, _) =
             caves
-            & dropWhile (\ (_, (x, y)) -> y /= floor)
+            & dropWhile (\ (_, lastPath) -> (lastPath & last & snd) /= floor)
             & head
     let lastSize = lstCave & Map.size
     let restingSand = lastSize - Map.size cave
@@ -29,10 +29,11 @@ solve input lines = do
     print restingSand
     print $ lstCave & Map.toList & map snd & filter (== 'o') & length
 
-dropSand :: Int -> (Cave, Pos) -> Maybe ((Cave, Pos), (Cave, Pos))
+dropSand :: Int -> (Cave, [Pos]) -> Maybe ((Cave, [Pos]), (Cave, [Pos]))
 dropSand floor (cave, _) = do
-    Just ((cave', lastPos), (cave', lastPos)) where
-        lastPos = sandPath floor cave & last
+    Just ((cave', lastPath), (cave', lastPath)) where
+        lastPath = sandPath floor cave
+        lastPos = last lastPath
         cave' = do
             if snd lastPos == floor then
                 cave
@@ -69,12 +70,15 @@ readPaths lines = do
             let [xTxt, yTxt] = Split.splitOn "," xyTxt
             (read xTxt, read yTxt) )) 
 
-display :: Int -> (Cave, Pos) -> IO ()
-display lns (cave', lstPos) = do
+display :: Int -> (Cave, [Pos]) -> IO ()
+display lns (cave, lstPath) = do
     forM_ (take lns gridCoords) (\ row -> map lookup row & putStrLn)
+    -- print lstPath
     where 
-        cave = cave' & Map.insert lstPos 'X' -- & Map.insert (500, 0) 'X' 
-        ps = Map.keys cave
+        cave' = cave & Map.insert (500, 0) '+' 
+        cave'' = foldl (\ cv pos -> Map.insert pos '~' cv) cave' lstPath
+            -- cave' & Map.insert lstPos 'X' -- & Map.insert (500, 0) '+' 
+        ps = Map.keys cave''
         minX = ps & map fst & minimum
         maxX = ps & map fst & maximum
         minY = ps & map snd & minimum
@@ -87,7 +91,7 @@ display lns (cave', lstPos) = do
                 ys
                 & map (\ y -> xs & map (,y))
         lookup pos@(x, y) = do
-            Map.lookup (minX + x, minY + y) cave
+            Map.lookup (minX + x, minY + y) cave''
                 & \ case
                         (Just c) -> c
                         _ -> ' '
