@@ -24,10 +24,11 @@ solve input lines = do
             & head
     let lastSize = lstCave & Map.size
     let restingSand = lastSize - Map.size cave
-    -- display 85 (caves !! 515)
-    display 1000 final
+    display 200 (caves !! 755)
+    -- display 1000 final
     print restingSand
     print $ lstCave & Map.toList & map snd & filter (== 'o') & length
+
 
 dropSand :: Int -> (Cave, [Pos]) -> Maybe ((Cave, [Pos]), (Cave, [Pos]))
 dropSand floor (cave, _) = do
@@ -73,12 +74,13 @@ readPaths lines = do
 display :: Int -> (Cave, [Pos]) -> IO ()
 display lns (cave, lstPath) = do
     forM_ (take lns gridCoords) (\ row -> map lookup row & putStrLn)
-    -- print lstPath
+    print (minX, minY)
     where 
-        cave' = cave & Map.insert (500, 0) '+' 
-        cave'' = foldl (\ cv pos -> Map.insert pos '~' cv) cave' lstPath
-            -- cave' & Map.insert lstPos 'X' -- & Map.insert (500, 0) '+' 
-        ps = Map.keys cave''
+        cave' = 
+            cave & Map.insert (500, 0) '+' 
+            & \ cave -> foldl (\ cv pos -> Map.insert pos '~' cv) cave lstPath
+            & Map.insert (last lstPath) 'X' -- & Map.insert (500, 0) '+' 
+        ps = Map.keys cave'
         minX = ps & map fst & minimum
         maxX = ps & map fst & maximum
         minY = ps & map snd & minimum
@@ -91,7 +93,7 @@ display lns (cave, lstPath) = do
                 ys
                 & map (\ y -> xs & map (,y))
         lookup pos@(x, y) = do
-            Map.lookup (minX + x, minY + y) cave''
+            Map.lookup (minX + x, minY + y) cave'
                 & \ case
                         (Just c) -> c
                         _ -> ' '
