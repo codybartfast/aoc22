@@ -1,6 +1,6 @@
 -- {-# LANGUAGE TupleSections #-}
 -- {-# LANGUAGE LambdaCase #-}
-module Day00 (solve) where
+module Day15 (solve) where
 
 import Data.Function ( (&) )
 import Data.List ()
