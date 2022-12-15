@@ -24,8 +24,8 @@ solve input lines = do
             & head
     let lastSize = lstCave & Map.size
     let restingSand = lastSize - Map.size cave
-    display 200 (caves !! 755)
-    -- display 1000 final
+    -- display 200 (caves !! 32)
+    display 1000 final
     print restingSand
     print $ lstCave & Map.toList & map snd & filter (== 'o') & length
 
@@ -74,12 +74,13 @@ readPaths lines = do
 display :: Int -> (Cave, [Pos]) -> IO ()
 display lns (cave, lstPath) = do
     forM_ (take lns gridCoords) (\ row -> map lookup row & putStrLn)
-    print (minX, minY)
+    putStrLn ""
+    print ((minX, minY), (maxX, maxY))
     where 
         cave' = 
             cave & Map.insert (500, 0) '+' 
             & \ cave -> foldl (\ cv pos -> Map.insert pos '~' cv) cave lstPath
-            & Map.insert (last lstPath) 'X' -- & Map.insert (500, 0) '+' 
+            & Map.insert (last lstPath) 'S'
         ps = Map.keys cave'
         minX = ps & map fst & minimum
         maxX = ps & map fst & maximum
