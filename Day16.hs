@@ -28,22 +28,17 @@ solve input lines = do
     let getDist = getDistanceFromValves valveList getValve
     let allTargets = valveList & filter ((> 0) . rate) & map name
     let add = addRoute getValve getDist
-    
-    print $
-        foldl add (start allTargets) ["DD", "BB", "JJ", "HH", "EE", "CC"]
-        & waitOut
+    let expand = expandStates add
+    let s0 = start allTargets
 
+    print $ iterate expand [s0] !! 6 & map waitOut & maximum 
+        
 
-waitOut state = do
-    let reduction' = reduction state + timeLeft state * aggRate state
-    state {timeLeft = 0, reduction = reduction'}
+expandStates :: (State -> String -> State) -> [State] -> [State]
+expandStates add states = do concatMap (expandState add) states
 
-start targets =
-    State { route = ["AA"]
-          , timeLeft = 30
-          , targetsLeft = targets
-          , aggRate = 0
-          , reduction = 0 }
+expandState :: (State -> String -> State) -> State -> [State]
+expandState add state = map (add state) (targetsLeft state)
 
 addRoute :: (String -> Valve) -> (String -> String -> Int) -> State -> String -> State
 addRoute getValve getDist state next = do
@@ -60,6 +55,17 @@ addRoute getValve getDist state next = do
           , aggRate = aggRate'
           , reduction = reduction' }
 
+waitOut state = do
+    let reduction' = reduction state + timeLeft state * aggRate state
+    reduction'
+
+start targets =
+    State { route = ["AA"]
+          , timeLeft = 30
+          , targetsLeft = targets
+          , aggRate = 0
+          , reduction = 0 }
+          
 getDistanceFromValves valves getValve = do
     \ n1 n2 -> do
         let (Just distance) = Map.lookup (n1, n2) distMap
