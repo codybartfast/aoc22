@@ -20,7 +20,7 @@ data State = State
     , targetsLeft :: [String]
     , aggRate :: Int
     , reduction :: Int
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 solve input lines = do
     let valveList = readValves lines
@@ -28,11 +28,23 @@ solve input lines = do
     let getDist = getDistanceFromValves valveList getValve
     let allTargets = valveList & filter ((> 0) . rate) & map name
     let add = addRoute getValve getDist
-    let expand = expandStates add
+    let expand = includeAndExpand add
+    let expandAndPrune = prune 100 . expand
     let s0 = start allTargets
 
-    print $ iterate expand [s0] !! 6 & map waitOut & maximum 
+    print $ iterate expandAndPrune [s0] !! (length allTargets)  & head  & waitOut
         
+prune size states =
+    states
+    & filter ((>= 0) . timeLeft)
+    & nub
+    & sortOn waitOut
+    & reverse  
+    & take size
+
+includeAndExpand :: (State -> String -> State) -> [State] -> [State]
+includeAndExpand add states = states ++ expandStates add states
+
 
 expandStates :: (State -> String -> State) -> [State] -> [State]
 expandStates add states = do concatMap (expandState add) states
@@ -40,7 +52,6 @@ expandStates add states = do concatMap (expandState add) states
 expandState :: (State -> String -> State) -> State -> [State]
 expandState add state = map (add state) (targetsLeft state)
 
-addRoute :: (String -> Valve) -> (String -> String -> Int) -> State -> String -> State
 addRoute getValve getDist state next = do
     let nextValve = getValve next
     let route' = next : route state
