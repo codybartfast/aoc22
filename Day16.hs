@@ -14,9 +14,13 @@ data Valve = Valve {
     , leads :: [String]
     } deriving (Show)
 
-data State = State 
+data Helper = Helper 
     { route :: [String]
     , timeLeft :: Int
+    } deriving (Show, Eq)
+
+data State = State 
+    { helpers :: [Helper]
     , targetsLeft :: [String]
     , aggRate :: Int
     , reduction :: Int
@@ -34,9 +38,10 @@ solve input lines = do
 
     print $ iterate expandAndPrune [s0] !! (length allTargets)  & head  & waitOut
         
+prune :: Int -> [State] -> [State]
 prune size states =
     states
-    & filter ((>= 0) . timeLeft)
+    & filter ((>= 0) . timeLeft . me)
     & nub
     & sortOn waitOut
     & reverse  
@@ -52,27 +57,30 @@ expandStates add states = do concatMap (expandState add) states
 expandState :: (State -> String -> State) -> State -> [State]
 expandState add state = map (add state) (targetsLeft state)
 
+addRoute :: (String -> Valve) -> (String -> String -> Int) -> State -> String -> State
 addRoute getValve getDist state next = do
     let nextValve = getValve next
-    let route' = next : route state
-    let timePassed = getDist (head (route state)) next  + 1
-    let timeLeft' = timeLeft state - timePassed
+    let route' = next : route (me state)
+    let timePassed = getDist (head (route (me state))) next  + 1
+    let timeLeft' = timeLeft (me state) - timePassed
     let targetsLeft' = delete next (targetsLeft state)
     let aggRate' = aggRate state + rate nextValve
     let reduction' = reduction state + (timePassed * aggRate state)
-    State { route = route'
-          , timeLeft = timeLeft'
+    State { helpers = [Helper {route = route', timeLeft = timeLeft'}]
           , targetsLeft = targetsLeft'
           , aggRate = aggRate'
           , reduction = reduction' }
 
+me state = helpers state & head
+ele state = helpers state  !! 1
+
+waitOut :: State -> Int
 waitOut state = do
-    let reduction' = reduction state + timeLeft state * aggRate state
+    let reduction' = reduction state + timeLeft (me state) * aggRate state
     reduction'
 
 start targets =
-    State { route = ["AA"]
-          , timeLeft = 30
+    State { helpers = [Helper {route = ["AA"], timeLeft = 30 }]
           , targetsLeft = targets
           , aggRate = 0
           , reduction = 0 }
