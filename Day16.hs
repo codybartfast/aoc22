@@ -17,10 +17,12 @@ data Valve = Valve {
 data Helper = Helper 
     { route :: [String]
     , timeLeft :: Int
+    , extraRate :: Int
     } deriving (Show, Eq)
 
 data State = State 
     { helpers :: [Helper]
+    , minsLeft :: Int
     , targetsLeft :: [String]
     , aggRate :: Int
     , reduction :: Int
@@ -62,11 +64,15 @@ addRoute getValve getDist state next = do
     let route' = next : route first
     let timePassed = getDist (head (route first)) next  + 1
     let timeLeft' = timeLeft first - timePassed
+    let extraRate' = rate nextValve
+    let minsLeft' = minsLeft state
     let targetsLeft' = delete next (targetsLeft state)
     let aggRate' = aggRate state + rate nextValve
     let reduction' = reduction state + (timePassed * aggRate state)
-    let first' = Helper {route = route', timeLeft = timeLeft'}
-    State { helpers = first' : rest
+    let first' = 
+            Helper {route = route', timeLeft = timeLeft', extraRate = extraRate'}
+    State { helpers = sortOnDesc timeLeft (first' : rest)
+          , minsLeft = minsLeft'
           , targetsLeft = targetsLeft'
           , aggRate = aggRate'
           , reduction = reduction' }
@@ -82,8 +88,9 @@ waitOut state = do
 
 start targets time =
     State { helpers = 
-                [ Helper {route = ["AA"], timeLeft = time }
-                , Helper {route = ["AA"], timeLeft = time }]
+                [ Helper {route = ["AA"], timeLeft = time, extraRate = 0 }
+                , Helper {route = ["AA"], timeLeft = -1, extraRate = 0 }]
+          , minsLeft = time
           , targetsLeft = targets
           , aggRate = 0
           , reduction = 0 }
