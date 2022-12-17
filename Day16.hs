@@ -34,22 +34,20 @@ solve input lines = do
     let add = addRoute getValve getDist
     let expand = includeAndExpand add
     let expandAndPrune = prune 100 . expand
-    let s0 = start allTargets
+    let s0 = start allTargets 30
 
     print $ iterate expandAndPrune [s0] !! (length allTargets)  & head  & waitOut
         
 prune :: Int -> [State] -> [State]
 prune size states =
     states
-    & filter ((>= 0) . timeLeft . me)
+    & filter ((>= 0) . timeLeft . fstHlp)
     & nub
-    & sortOn waitOut
-    & reverse  
+    & sortOnDesc waitOut
     & take size
 
 includeAndExpand :: (State -> String -> State) -> [State] -> [State]
 includeAndExpand add states = states ++ expandStates add states
-
 
 expandStates :: (State -> String -> State) -> [State] -> [State]
 expandStates add states = do concatMap (expandState add) states
@@ -60,27 +58,32 @@ expandState add state = map (add state) (targetsLeft state)
 addRoute :: (String -> Valve) -> (String -> String -> Int) -> State -> String -> State
 addRoute getValve getDist state next = do
     let nextValve = getValve next
-    let route' = next : route (me state)
-    let timePassed = getDist (head (route (me state))) next  + 1
-    let timeLeft' = timeLeft (me state) - timePassed
+    let (first:rest) = helpers state
+    let route' = next : route first
+    let timePassed = getDist (head (route first)) next  + 1
+    let timeLeft' = timeLeft first - timePassed
     let targetsLeft' = delete next (targetsLeft state)
     let aggRate' = aggRate state + rate nextValve
     let reduction' = reduction state + (timePassed * aggRate state)
-    State { helpers = [Helper {route = route', timeLeft = timeLeft'}]
+    let first' = Helper {route = route', timeLeft = timeLeft'}
+    State { helpers = first' : rest
           , targetsLeft = targetsLeft'
           , aggRate = aggRate'
           , reduction = reduction' }
 
-me state = helpers state & head
-ele state = helpers state  !! 1
+-- me state = helpers state & head
+fstHlp state = helpers state & head
+-- ele state = helpers state  !! 1
 
 waitOut :: State -> Int
 waitOut state = do
-    let reduction' = reduction state + timeLeft (me state) * aggRate state
+    let reduction' = reduction state + timeLeft (fstHlp state) * aggRate state
     reduction'
 
-start targets =
-    State { helpers = [Helper {route = ["AA"], timeLeft = 30 }]
+start targets time =
+    State { helpers = 
+                [ Helper {route = ["AA"], timeLeft = time }
+                , Helper {route = ["AA"], timeLeft = time }]
           , targetsLeft = targets
           , aggRate = 0
           , reduction = 0 }
@@ -139,3 +142,8 @@ readValves lines = do
             Valve {name = id, rate = rate, leads = reachable}
 
 pairwise l = zip l (tail l)
+
+sortDesc :: Ord a => [a] -> [a]
+sortDesc = reverse . sort
+
+sortOnDesc pred = reverse . sortOn pred
