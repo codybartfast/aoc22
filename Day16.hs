@@ -36,9 +36,11 @@ solve input lines = do
     let add = addRoute getValve getDist
     let expand = includeAndExpand add
     let expandAndPrune = prune 100 . expand
-    let s0 = start allTargets 30
+    let s0 = start allTargets 26
 
-    print $ iterate expandAndPrune [s0] !! (length allTargets)  & head  & waitOut
+    let r = iterate expandAndPrune [s0] !! (length allTargets)  & head
+    print r
+    print $ waitOut r
         
 prune :: Int -> [State] -> [State]
 prune size states =
@@ -62,14 +64,14 @@ addRoute getValve getDist state next = do
     let nextValve = getValve next
     let (first:rest) = helpers state
     let route' = next : route first
-    let timePassed = getDist (head (route first)) next  + 1
-    let timeLeft' = timeLeft first - timePassed
+    let travelTime = getDist (head (route first)) next + 1
+    let timeLeft' = timeLeft first - travelTime
+    let minsLeft' = timeLeft first
     let extraRate' = rate nextValve
-    let minsLeft' = minsLeft state
     let targetsLeft' = delete next (targetsLeft state)
-    let aggRate' = aggRate state + rate nextValve
-    let reduction' = reduction state + (timePassed * aggRate state)
-    let first' = 
+    let reduction' = reduction state + ((minsLeft state - minsLeft') * aggRate state)
+    let aggRate' = aggRate state + extraRate first
+    let first' =
             Helper {route = route', timeLeft = timeLeft', extraRate = extraRate'}
     State { helpers = sortOnDesc timeLeft (first' : rest)
           , minsLeft = minsLeft'
@@ -83,13 +85,24 @@ fstHlp state = helpers state & head
 
 waitOut :: State -> Int
 waitOut state = do
-    let reduction' = reduction state + timeLeft (fstHlp state) * aggRate state
-    reduction'
+    let (first:second:_) = helpers state
+    let preSpan = minsLeft state - maxZero (timeLeft first)
+    let reduction' = reduction state + preSpan * aggRate state
+    let aggRate' = aggRate state + extraRate first
+
+    let firstSpan = maxZero (timeLeft first) - maxZero (timeLeft second)
+    let reduction'' = reduction' + firstSpan * aggRate'
+    let aggRate'' = aggRate' + extraRate second
+
+    let secondSpan = maxZero (timeLeft second)
+    let reduction''' = reduction'' + secondSpan * aggRate''
+
+    reduction'''
 
 start targets time =
     State { helpers = 
                 [ Helper {route = ["AA"], timeLeft = time, extraRate = 0 }
-                , Helper {route = ["AA"], timeLeft = -1, extraRate = 0 }]
+                , Helper {route = ["AA"], timeLeft = time, extraRate = 0 } ]
           , minsLeft = time
           , targetsLeft = targets
           , aggRate = 0
@@ -154,3 +167,6 @@ sortDesc :: Ord a => [a] -> [a]
 sortDesc = reverse . sort
 
 sortOnDesc pred = reverse . sortOn pred
+
+maxZero :: Int -> Int
+maxZero = max 0
