@@ -1,15 +1,13 @@
 {-# LANGUAGE TupleSections #-}
--- {-# LANGUAGE LambdaCase #-}
 module Day16 (solve) where
 
 import Data.Function ( (&) )
 import Data.List
--- import qualified Data.Char as Char
 import qualified Data.List.Split as Split
 import qualified Data.Map as Map
 
-data Valve = Valve {
-    name :: String
+data Valve = Valve 
+    { name :: String
     , rate :: Int
     , leads :: [String]
     } deriving (Show)
@@ -35,31 +33,26 @@ solve input lines = do
     let allTargets = valveList & filter ((> 0) . rate) & map name
     let add = addRoute getValve getDist
     let expand = includeAndExpand add
-    let expandAndPrune = prune 100 . expand
-    let s0 = start allTargets 26
+    let expandAndPrune = prune 5000 . expand
+    let start = getStart allTargets 26
 
-    let r = iterate expandAndPrune [s0] !! (length allTargets)  & head
-    print r
-    print $ waitOut r
-        
-prune :: Int -> [State] -> [State]
+    print $
+        iterate expandAndPrune [start] !! length allTargets  
+        & head & waitOut
+
 prune size states =
     states
-    & filter ((>= 0) . timeLeft . fstHlp)
+    & filter ((> 0) . timeLeft . fstHlp)
     & nub
     & sortOnDesc waitOut
     & take size
 
-includeAndExpand :: (State -> String -> State) -> [State] -> [State]
 includeAndExpand add states = states ++ expandStates add states
 
-expandStates :: (State -> String -> State) -> [State] -> [State]
 expandStates add states = do concatMap (expandState add) states
 
-expandState :: (State -> String -> State) -> State -> [State]
 expandState add state = map (add state) (targetsLeft state)
 
-addRoute :: (String -> Valve) -> (String -> String -> Int) -> State -> String -> State
 addRoute getValve getDist state next = do
     let nextValve = getValve next
     let (first:rest) = helpers state
@@ -69,21 +62,22 @@ addRoute getValve getDist state next = do
     let minsLeft' = timeLeft first
     let extraRate' = rate nextValve
     let targetsLeft' = delete next (targetsLeft state)
-    let reduction' = reduction state + ((minsLeft state - minsLeft') * aggRate state)
+    let reduction' =
+            reduction state + ((minsLeft state - minsLeft') * aggRate state)
     let aggRate' = aggRate state + extraRate first
-    let first' =
-            Helper {route = route', timeLeft = timeLeft', extraRate = extraRate'}
+    let first' = Helper 
+            {route = route'
+            , timeLeft = timeLeft'
+            , extraRate = extraRate'
+            }
     State { helpers = sortOnDesc timeLeft (first' : rest)
           , minsLeft = minsLeft'
           , targetsLeft = targetsLeft'
           , aggRate = aggRate'
           , reduction = reduction' }
 
--- me state = helpers state & head
 fstHlp state = helpers state & head
--- ele state = helpers state  !! 1
 
-waitOut :: State -> Int
 waitOut state = do
     let (first:second:_) = helpers state
     let preSpan = minsLeft state - maxZero (timeLeft first)
@@ -99,7 +93,7 @@ waitOut state = do
 
     reduction'''
 
-start targets time =
+getStart targets time =
     State { helpers = 
                 [ Helper {route = ["AA"], timeLeft = time, extraRate = 0 }
                 , Helper {route = ["AA"], timeLeft = time, extraRate = 0 } ]
@@ -148,7 +142,7 @@ getDistanceFromValves valves getValve = do
 
 getValveFromList valveList = do
     let vMap = valveList & map (\ v -> (name v, v)) & Map.fromList
-    \ name ->  Map.lookup name vMap & \ (Just vlv) -> vlv
+    \ name -> Map.lookup name vMap & \ (Just vlv) -> vlv
 
 readValves lines = do
     map readValve lines 
@@ -168,5 +162,4 @@ sortDesc = reverse . sort
 
 sortOnDesc pred = reverse . sortOn pred
 
-maxZero :: Int -> Int
 maxZero = max 0
