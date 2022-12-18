@@ -1,22 +1,41 @@
--- {-# LANGUAGE TupleSections #-}
--- {-# LANGUAGE LambdaCase #-}
 module Day17 (solve) where
 
 import Data.Function ( (&) )
 import Data.List
--- import qualified Data.Char as Char
--- import qualified Data.List.Split as Split
--- import qualified Data.Map as Map
 import qualified Data.Set as Set
-import qualified Data.Bits as Set
 
 solve input lines = do
     let wind = repeat input & concat
-    -- let rock : rocks' = rocks
     let floor = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0)]
     let chamber = Set.fromList floor
-    let full = foldl dropRock (chamber, wind) (take 2022 rocks)
-    print $ full & fst & Set.toList & map snd & maximum
+    let results = scanl dropRock (chamber, wind) rocks
+
+    let ycounts = zip [0..] (map maxCount results)
+    let [(cycle, (height, _)), (cycle', (height', _)), (cycle'', (height'', _))]
+            = filter ((== 7) . snd . snd) ycounts & take 3
+    let cycleOff = cycle' - cycle
+    let heightOff = height' - height
+    let cycleMod = cycle'' - cycle'
+    let heightMod = height'' - height'
+    let calculateHeight targetCycles = do
+            let fullCycles = (targetCycles - cycleOff ) `div` cycleMod
+            let cycleBase = cycleOff + (fullCycles * cycleMod)
+            let heightBase = heightOff + (fullCycles * heightMod)
+            let cyclesRem = targetCycles - cycleBase
+            let heightRem = do
+                    measureHeight (results !! (cycleOff + cyclesRem))
+                        - measureHeight (results !! cycleOff)
+            heightBase + heightRem
+
+    print $ calculateHeight 2022
+    print $ calculateHeight 1000000000000
+    
+maxCount (chamber, _) = do
+    let ys = Set.toList chamber & map snd
+    let mx = maximum ys
+    (mx, filter (== mx) ys & length)
+
+measureHeight (chamber, _) = chamber & Set.toList & map snd & maximum
 
 dropRock (chamber, wind) rock = do
     let top = Set.toList chamber & map snd & maximum
@@ -27,7 +46,7 @@ dropRock (chamber, wind) rock = do
     where
         clr = clear chamber rock
         move (loc@(x, y), _) gust = do
-            let blownLoc = applyGust loc gust
+            let blownLoc = blow loc gust
             let loc'@(x', y') = if clr blownLoc then blownLoc else loc
             let fallLoc = (x', y' - 1)
             let canFall = clr fallLoc
@@ -40,30 +59,26 @@ dropRock (chamber, wind) rock = do
                     else (loc', wind)
             
 clear chamber rock loc@(x, y) =
-    x >= 0
-    && x + width rock -1 <= 6
-    && doesnotOverlap ()
+    x >= 0 && x + width rock -1 <= 6 && doesnotOverlap ()
     where
         doesnotOverlap () =
             Set.intersection chamber (Set.fromList (rockLocs rock loc))
             & length
             & (== 0)
 
-applyGust loc@(x, y) gust 
-    | gust == '<' = (x - 1, y) 
-    | gust == '>' = (x + 1, y)
+blow loc@(x, y) gust | gust == '<' = (x - 1, y) | gust == '>' = (x + 1, y)
 
 rockLocs rock loc@(locX, locY) =
     map (\ (x, y) -> (locX + x, locY + y)) (parts rock)
 
-rocks = repeat fiveRocks & concat
-
-fiveRocks = 
-    [ makeRock "-" [(0, 0), (1, 0), (2, 0), (3, 0)]
-    , makeRock "+" [(1, 0), (0, 1), (1, 1), (2, 1), (1, 2)]
-    , makeRock "J" [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2)]
-    , makeRock "l" [(0, 0), (0, 1), (0, 2), (0, 3)]
-    , makeRock "o" [(0, 0), (0, 1), (1, 0), (1, 1)] ]
+rocks = do
+    let fiveRocks = 
+            [ makeRock "-" [(0, 0), (1, 0), (2, 0), (3, 0)]
+            , makeRock "+" [(1, 0), (0, 1), (1, 1), (2, 1), (1, 2)]
+            , makeRock "J" [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2)]
+            , makeRock "l" [(0, 0), (0, 1), (0, 2), (0, 3)]
+            , makeRock "o" [(0, 0), (0, 1), (1, 0), (1, 1)] ]
+    repeat fiveRocks & concat
 
 makeRock symbol parts = Rock
     { symbol = symbol
