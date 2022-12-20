@@ -1,4 +1,3 @@
-
 import Data.List
 import qualified Data.Char as Char
 import qualified Data.List.Split as Split
