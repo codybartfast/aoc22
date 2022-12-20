@@ -16,7 +16,8 @@ solve input lines = do
     let blueprints = readBlueprints lines
     let inventory = [0, 0, 0, 0]
     let army = [1, 0, 0, 0]
-    let costs = blueprints & head & snd
+    let costs = blueprints & (!! 1) & snd
+    print costs
     let adv = prune . advanceMinute costs
     -- print $ length costs
     print $ [(inventory, army)] 
@@ -25,7 +26,7 @@ solve input lines = do
         -- & map fst
         & map (uncurry (flip zip))
         & best
-        -- & sortOnDesc (fst . (!! 1)) -- & take 10
+        -- & sortOnDesc (snd . (!! 1)) -- & take 10
         -- & filter (\ case  [_, _, _, (2, 9)] -> True  ; _ -> False )
 
 geode = snd . (!! 3)
@@ -48,7 +49,8 @@ value (inventory, army) = do
         -- let factors = map (2^) [0 .. ]
         -- sum $ zipWith (*) factors army
     
-        sum $ zipWith (*) inventory [3, 3, 100, 1000]
+        sum (zipWith (*) inventory [1, 3, 100, 1000])
+        + sum (zipWith (*) army [1, 3, 100, 1000])
 
 advanceMinute :: [[Int]] -> [([Int], [Int])] -> [([Int], [Int])]
 advanceMinute costs states = do
