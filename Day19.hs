@@ -20,7 +20,8 @@ solve input lines = do
     -- print costs
     let adv = prune . advanceMinute costs
     -- print $ length costs
-    print $ blueprints & map (uncurry (*) . quality) & sum
+    -- print $ blueprints & map (uncurry (*) . quality) & sum
+    print $ blueprints & take 3 & map (quality)  & (product)
 
 quality bluePrint = do
     let inventory = [0, 0, 0, 0]
@@ -29,11 +30,11 @@ quality bluePrint = do
     let adv = prune . advanceMinute (snd bluePrint)
     [(inventory, army)] 
         & iterate adv 
-        & (!! 24)
+        & (!! 32)
         -- & map fst
         & map (uncurry (flip zip))
         & best
-        & (fst bluePrint,)
+        -- & (fst bluePrint,)
 
 geode = snd . (!! 3)
 
@@ -47,7 +48,7 @@ prune :: [([Int], [Int])] ->  [([Int], [Int])]
 prune states =
     states
     & sortOnDesc value
-    & take 1000
+    & take 2000
 
 value :: ([Int], [Int]) -> Int
 value (inventory, army) = do
