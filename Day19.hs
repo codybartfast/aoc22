@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
--- {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase #-}
 module Day19 (solve) where
 
 import Data.Function ( (&) )
@@ -21,20 +21,34 @@ solve input lines = do
     -- print $ length costs
     print $ [(inventory, army)] 
         & iterate adv 
-        & (!! 3)
+        & (!! 24)
         -- & map fst
         & map (uncurry (flip zip))
-        -- & find ((== (1, 2)) . (!! 0))
+        & best
+        -- & sortOnDesc (fst . (!! 1)) -- & take 10
+        -- & filter (\ case  [_, _, _, (2, 9)] -> True  ; _ -> False )
+
+geode = snd . (!! 3)
+
+best states = do
+    let m = states & map geode & maximum
+    m
+    -- states & filter ((== m) . geode)
+
 
 prune :: [([Int], [Int])] ->  [([Int], [Int])]
 prune states =
     states
     & sortOnDesc value
-    & take 400
+    & take 1000
 
+value :: ([Int], [Int]) -> Int
 value (inventory, army) = do
-        let factors = map (2^) [0 .. ]
-        sum $ zipWith (*) factors (army ++ [last inventory])
+        -- let items = zipWith (\ a b -> [a, b]) army inventory & concat
+        -- let factors = map (2^) [0 .. ]
+        -- sum $ zipWith (*) factors army
+    
+        sum $ zipWith (*) inventory [3, 3, 100, 1000]
 
 advanceMinute :: [[Int]] -> [([Int], [Int])] -> [([Int], [Int])]
 advanceMinute costs states = do
@@ -45,12 +59,11 @@ advanceMinute costs states = do
         states''
 
 spendChoices costs states = do
-    let x = unfoldr (\ sts -> do
-                let sts' = concatMap (tryBuildEach costs) sts  
-                Just (sts, sts')) states
-
-    takeWhile (/= []) x
-    & concat & nub
+    unfoldr (\ sts -> do
+        let sts' = concatMap (tryBuildEach costs) sts  
+        Just (sts, sts')) states
+        & take 2
+        & concat & nub
     -- let x = concatMap (tryBuildEach costs) [(inventory, army)]
     -- concatMap (tryBuildEach costs) x & nub
 
