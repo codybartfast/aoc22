@@ -7,7 +7,7 @@ import Day23 (solve)
 trim = dropWhileEnd Char.isSpace
 
 main = do
-  fileContent <- readFile "input/Day23/Test01.txt"
+  fileContent <- readFile "input/Day23/Input.txt"
   let input = trim fileContent
   let lines = Split.splitOn "\n" input
   solve input lines
