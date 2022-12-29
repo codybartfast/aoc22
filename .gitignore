@@ -1,7 +1,3 @@
-temp.txt
-/input/
-#########
-
 dist
 dist-*
 cabal-dev
